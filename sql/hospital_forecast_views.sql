@@ -131,7 +131,7 @@ COMMENT ON VIEW vw_expected_downstream_events_next_week IS
     'One-step downstream forecast from entry arrivals to the first pathway transition.';
 
 CREATE OR REPLACE VIEW vw_forecast_pathway_events_next_week AS
-WITH entry_arrivals AS (
+WITH RECURSIVE entry_arrivals AS (
     SELECT *
     FROM vw_entry_point_arrival_rate_4w
 ),
@@ -244,7 +244,7 @@ seed AS (
        AND tr.entry_point_priority IS NOT DISTINCT FROM NULLIF(pw.entry_point_priority, '')
        AND tr.case_priority = ecm.case_priority
 ),
-RECURSIVE forecast AS (
+forecast AS (
     SELECT *
     FROM seed
 

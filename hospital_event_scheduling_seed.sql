@@ -138,32 +138,32 @@ pathway_scopes (
     FROM case_request_progression cp
 
     UNION ALL
-    SELECT 'Emerg_Admit', NULL, cp.case_priority, NULL
+    SELECT 'Emerg_Admit', NULL::text, cp.case_priority, NULL::text
     FROM case_request_progression cp
     WHERE cp.case_priority <> '1A'
 
     UNION ALL
-    SELECT 'Emerg_Admit', NULL, '1A', NULL
+    SELECT 'Emerg_Admit', NULL::text, '1A', NULL::text
 
     UNION ALL
-    SELECT 'Referral', ep, cp.case_priority, NULL
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, NULL::text
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P1'), ('P2')) AS ep(entry_point_priority)
 
     UNION ALL
-    SELECT 'Referral', ep, cp.case_priority, 'second_followup_before_case_request'
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, 'second_followup_before_case_request'
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P3'), ('P4')) AS ep(entry_point_priority)
     WHERE cp.case_priority <> '1A'
 
     UNION ALL
-    SELECT 'Referral', ep, cp.case_priority, 'second_followup_after_case_request'
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, 'second_followup_after_case_request'
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P3'), ('P4')) AS ep(entry_point_priority)
     WHERE cp.case_priority <> '1A'
 
     UNION ALL
-    SELECT 'Referral', ep, '1A', pv
+    SELECT 'Referral', ep.entry_point_priority, '1A', pv.path_variant
     FROM (VALUES ('P3'), ('P4')) AS ep(entry_point_priority)
     CROSS JOIN (VALUES
         ('second_followup_before_case_request'),
@@ -171,7 +171,7 @@ pathway_scopes (
     ) AS pv(path_variant)
 
     UNION ALL
-    SELECT 'New Clinic Visit', NULL, cp.case_priority, NULL
+    SELECT 'New Clinic Visit', NULL::text, cp.case_priority, NULL::text
     FROM case_request_progression cp
 ),
 transition_edges (
@@ -187,106 +187,106 @@ transition_edges (
     max_repeat_count
 ) AS (
     -- Emerg_Sent_To_Or
-    SELECT 'Emerg_Sent_To_Or', NULL, cp.case_priority, NULL, 'Emerg_Sent_To_Or', 'CaseRequest', 1.00000, 'create_case_request', false, 1
+    SELECT 'Emerg_Sent_To_Or', NULL::text, cp.case_priority, NULL::text, 'Emerg_Sent_To_Or', 'CaseRequest', 1.00000, 'create_case_request', false, 1
     FROM case_request_progression cp
 
     UNION ALL
     -- Emerg_Admit (non-1A)
-    SELECT 'Emerg_Admit', NULL, cp.case_priority, NULL, 'Emerg_Admit', 'CaseRequest', 0.85000, 'create_case_request', false, 1
+    SELECT 'Emerg_Admit', NULL::text, cp.case_priority, NULL::text, 'Emerg_Admit', 'CaseRequest', 0.85000, 'create_case_request', false, 1
     FROM case_request_progression cp
     WHERE cp.case_priority <> '1A'
     UNION ALL
-    SELECT 'Emerg_Admit', NULL, cp.case_priority, NULL, 'Emerg_Admit', 'New Clinic Visit', 0.15000, 'schedule_new_clinic_visit', false, 1
+    SELECT 'Emerg_Admit', NULL::text, cp.case_priority, NULL::text, 'Emerg_Admit', 'New Clinic Visit', 0.15000, 'schedule_new_clinic_visit', false, 1
     FROM case_request_progression cp
     WHERE cp.case_priority <> '1A'
     UNION ALL
-    SELECT 'Emerg_Admit', NULL, cp.case_priority, NULL, 'New Clinic Visit', 'CaseRequest', 1.00000, 'create_case_request', false, 1
+    SELECT 'Emerg_Admit', NULL::text, cp.case_priority, NULL::text, 'New Clinic Visit', 'CaseRequest', 1.00000, 'create_case_request', false, 1
     FROM case_request_progression cp
     WHERE cp.case_priority <> '1A'
 
     UNION ALL
     -- Emerg_Admit (1A)
-    SELECT 'Emerg_Admit', NULL, '1A', NULL, 'Emerg_Admit', 'CaseRequest', 1.00000, 'create_case_request', false, 1
+    SELECT 'Emerg_Admit', NULL::text, '1A', NULL::text, 'Emerg_Admit', 'CaseRequest', 1.00000, 'create_case_request', false, 1
 
     UNION ALL
     -- Referral P1/P2 clinic chain (non-1A)
-    SELECT 'Referral', ep, cp.case_priority, NULL, 'Referral', 'New Clinic Visit', 1.00000, 'schedule_new_clinic_visit', false, 1
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, NULL::text, 'Referral', 'New Clinic Visit', 1.00000, 'schedule_new_clinic_visit', false, 1
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P1'), ('P2')) AS ep(entry_point_priority)
     WHERE cp.case_priority <> '1A'
     UNION ALL
-    SELECT 'Referral', ep, cp.case_priority, NULL, 'New Clinic Visit', 'Follow-up Clinic Visit', 1.00000, 'schedule_followup_clinic_visit', false, 1
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, NULL::text, 'New Clinic Visit', 'Follow-up Clinic Visit', 1.00000, 'schedule_followup_clinic_visit', false, 1
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P1'), ('P2')) AS ep(entry_point_priority)
     WHERE cp.case_priority <> '1A'
     UNION ALL
-    SELECT 'Referral', ep, cp.case_priority, NULL, 'Follow-up Clinic Visit', 'CaseRequest', 1.00000, 'create_case_request', false, 1
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, NULL::text, 'Follow-up Clinic Visit', 'CaseRequest', 1.00000, 'create_case_request', false, 1
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P1'), ('P2')) AS ep(entry_point_priority)
     WHERE cp.case_priority <> '1A'
 
     UNION ALL
     -- Referral P1/P2 (1A shortcut)
-    SELECT 'Referral', ep, '1A', NULL, 'Referral', 'CaseRequest', 1.00000, 'create_case_request', false, 1
+    SELECT 'Referral', ep.entry_point_priority, '1A', NULL::text, 'Referral', 'CaseRequest', 1.00000, 'create_case_request', false, 1
     FROM (VALUES ('P1'), ('P2')) AS ep(entry_point_priority)
 
     UNION ALL
     -- Referral P1/P2 Elective extra follow-up before CaseRequest
-    SELECT 'Referral', ep, 'Elective', NULL, 'Follow-up Clinic Visit', 'Follow-up Clinic Visit', 0.35000, 'repeat_followup_clinic_visit', false, 2
+    SELECT 'Referral', ep.entry_point_priority, 'Elective', NULL::text, 'Follow-up Clinic Visit', 'Follow-up Clinic Visit', 0.35000, 'repeat_followup_clinic_visit', false, 2
     FROM (VALUES ('P1'), ('P2')) AS ep(entry_point_priority)
 
     UNION ALL
     -- Referral P3/P4 variant A (second follow-up before CaseRequest)
-    SELECT 'Referral', ep, cp.case_priority, 'second_followup_before_case_request', 'Referral', 'New Clinic Visit', 1.00000, 'schedule_new_clinic_visit', false, 1
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, 'second_followup_before_case_request', 'Referral', 'New Clinic Visit', 1.00000, 'schedule_new_clinic_visit', false, 1
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P3'), ('P4')) AS ep(entry_point_priority)
     WHERE cp.case_priority <> '1A'
     UNION ALL
-    SELECT 'Referral', ep, cp.case_priority, 'second_followup_before_case_request', 'New Clinic Visit', 'Follow-up Clinic Visit', 1.00000, 'schedule_followup_clinic_visit', false, 1
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, 'second_followup_before_case_request', 'New Clinic Visit', 'Follow-up Clinic Visit', 1.00000, 'schedule_followup_clinic_visit', false, 1
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P3'), ('P4')) AS ep(entry_point_priority)
     WHERE cp.case_priority <> '1A'
     UNION ALL
-    SELECT 'Referral', ep, cp.case_priority, 'second_followup_before_case_request', 'Follow-up Clinic Visit', 'Follow-up Clinic Visit', 1.00000, 'repeat_followup_clinic_visit', false, 2
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, 'second_followup_before_case_request', 'Follow-up Clinic Visit', 'Follow-up Clinic Visit', 1.00000, 'repeat_followup_clinic_visit', false, 2
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P3'), ('P4')) AS ep(entry_point_priority)
     WHERE cp.case_priority <> '1A'
     UNION ALL
-    SELECT 'Referral', ep, cp.case_priority, 'second_followup_before_case_request', 'Follow-up Clinic Visit', 'CaseRequest', 1.00000, 'create_case_request', false, 1
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, 'second_followup_before_case_request', 'Follow-up Clinic Visit', 'CaseRequest', 1.00000, 'create_case_request', false, 1
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P3'), ('P4')) AS ep(entry_point_priority)
     WHERE cp.case_priority <> '1A'
 
     UNION ALL
     -- Referral P3/P4 variant B (second follow-up after CaseRequest)
-    SELECT 'Referral', ep, cp.case_priority, 'second_followup_after_case_request', 'Referral', 'New Clinic Visit', 1.00000, 'schedule_new_clinic_visit', false, 1
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, 'second_followup_after_case_request', 'Referral', 'New Clinic Visit', 1.00000, 'schedule_new_clinic_visit', false, 1
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P3'), ('P4')) AS ep(entry_point_priority)
     WHERE cp.case_priority <> '1A'
     UNION ALL
-    SELECT 'Referral', ep, cp.case_priority, 'second_followup_after_case_request', 'New Clinic Visit', 'Follow-up Clinic Visit', 1.00000, 'schedule_followup_clinic_visit', false, 1
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, 'second_followup_after_case_request', 'New Clinic Visit', 'Follow-up Clinic Visit', 1.00000, 'schedule_followup_clinic_visit', false, 1
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P3'), ('P4')) AS ep(entry_point_priority)
     WHERE cp.case_priority <> '1A'
     UNION ALL
-    SELECT 'Referral', ep, cp.case_priority, 'second_followup_after_case_request', 'Follow-up Clinic Visit', 'CaseRequest', 1.00000, 'create_case_request', false, 1
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, 'second_followup_after_case_request', 'Follow-up Clinic Visit', 'CaseRequest', 1.00000, 'create_case_request', false, 1
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P3'), ('P4')) AS ep(entry_point_priority)
     WHERE cp.case_priority <> '1A'
     UNION ALL
-    SELECT 'Referral', ep, cp.case_priority, 'second_followup_after_case_request', 'CaseRequest', 'Follow-up Clinic Visit', 1.00000, 'schedule_followup_clinic_visit', false, 1
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, 'second_followup_after_case_request', 'CaseRequest', 'Follow-up Clinic Visit', 1.00000, 'schedule_followup_clinic_visit', false, 1
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P3'), ('P4')) AS ep(entry_point_priority)
     WHERE cp.case_priority <> '1A'
     UNION ALL
-    SELECT 'Referral', ep, cp.case_priority, 'second_followup_after_case_request', 'Follow-up Clinic Visit', 'Surgery', 1.00000, 'schedule_surgery', false, 1
+    SELECT 'Referral', ep.entry_point_priority, cp.case_priority, 'second_followup_after_case_request', 'Follow-up Clinic Visit', 'Surgery', 1.00000, 'schedule_surgery', false, 1
     FROM case_request_progression cp
     CROSS JOIN (VALUES ('P3'), ('P4')) AS ep(entry_point_priority)
     WHERE cp.case_priority <> '1A'
 
     UNION ALL
     -- Referral P3/P4 1A shortcut (both variants)
-    SELECT 'Referral', ep, '1A', pv, 'Referral', 'CaseRequest', 1.00000, 'create_case_request', false, 1
+    SELECT 'Referral', ep.entry_point_priority, '1A', pv.path_variant, 'Referral', 'CaseRequest', 1.00000, 'create_case_request', false, 1
     FROM (VALUES ('P3'), ('P4')) AS ep(entry_point_priority)
     CROSS JOIN (VALUES
         ('second_followup_before_case_request'),
@@ -295,17 +295,17 @@ transition_edges (
 
     UNION ALL
     -- New Clinic Visit entry pathway
-    SELECT 'New Clinic Visit', NULL, cp.case_priority, NULL, 'New Clinic Visit', 'Follow-up Clinic Visit', 1.00000, 'schedule_followup_clinic_visit', false, 1
+    SELECT 'New Clinic Visit', NULL::text, cp.case_priority, NULL::text, 'New Clinic Visit', 'Follow-up Clinic Visit', 1.00000, 'schedule_followup_clinic_visit', false, 1
     FROM case_request_progression cp
     WHERE cp.case_priority <> '1A'
     UNION ALL
-    SELECT 'New Clinic Visit', NULL, cp.case_priority, NULL, 'Follow-up Clinic Visit', 'CaseRequest', 1.00000, 'create_case_request', false, 1
+    SELECT 'New Clinic Visit', NULL::text, cp.case_priority, NULL::text, 'Follow-up Clinic Visit', 'CaseRequest', 1.00000, 'create_case_request', false, 1
     FROM case_request_progression cp
     WHERE cp.case_priority <> '1A'
     UNION ALL
-    SELECT 'New Clinic Visit', NULL, '1A', NULL, 'New Clinic Visit', 'CaseRequest', 1.00000, 'create_case_request', false, 1
+    SELECT 'New Clinic Visit', NULL::text, '1A', NULL::text, 'New Clinic Visit', 'CaseRequest', 1.00000, 'create_case_request', false, 1
     UNION ALL
-    SELECT 'New Clinic Visit', NULL, 'Elective', NULL, 'Follow-up Clinic Visit', 'Follow-up Clinic Visit', 0.30000, 'repeat_followup_clinic_visit', false, 2
+    SELECT 'New Clinic Visit', NULL::text, 'Elective', NULL::text, 'Follow-up Clinic Visit', 'Follow-up Clinic Visit', 0.30000, 'repeat_followup_clinic_visit', false, 2
 
     UNION ALL
     -- CaseRequest progression (standard paths)
@@ -573,7 +573,7 @@ SELECT
             )::integer
         )
     ),
-    CURRENT_DATE - (abs(hashtextextended(gs.n::text, 4)) % 365)
+    CURRENT_DATE - ((abs(hashtextextended(gs.n::text, 4)) % 365)::integer)
 FROM generate_series(1, 2000) AS gs(n)
 CROSS JOIN LATERAL (
     SELECT *
@@ -640,12 +640,12 @@ b AS (
                 END
             ELSE NULL
         END AS referral_tier,
-        abs(hashtextextended('s0' || gs.n::text, 0)) AS h0,
-        abs(hashtextextended('s1' || gs.n::text, 1)) AS h1,
-        abs(hashtextextended('s2' || gs.n::text, 2)) AS h2,
-        abs(hashtextextended('s3' || gs.n::text, 3)) AS h3,
-        abs(hashtextextended('s4' || gs.n::text, 4)) AS h4,
-        abs(hashtextextended('s5' || gs.n::text, 5)) AS h5,
+        mod(abs(hashtextextended('s0' || gs.n::text, 0)), 1073741823)::integer AS h0,
+        mod(abs(hashtextextended('s1' || gs.n::text, 1)), 1073741823)::integer AS h1,
+        mod(abs(hashtextextended('s2' || gs.n::text, 2)), 1073741823)::integer AS h2,
+        mod(abs(hashtextextended('s3' || gs.n::text, 3)), 1073741823)::integer AS h3,
+        mod(abs(hashtextextended('s4' || gs.n::text, 4)), 1073741823)::integer AS h4,
+        mod(abs(hashtextextended('s5' || gs.n::text, 5)), 1073741823)::integer AS h5,
         (timestamp '2023-01-01 07:00:00' + (gs.n * interval '21 hours')) AS anchor_ts
     FROM gs
 ),
@@ -1014,7 +1014,8 @@ f AS (
             ELSE
                 -- Elective: wait = surgery.start - surgery_request.start (request = t_elect_req_*).
                 -- 85%: 20–180 days, skewed (60% mass 50–110 d); 15%: 181–360 d; hard cap 360 d.
-                e.t_elect_req_start
+                COALESCE(e.t_fu3_end, e.t_fu2_end, e.t_fu1_end, e.t_ncv_elective_end)
+                + make_interval(days => (2 + (e.h2 % 4)))
                 + CASE
                     WHEN e.h4 % 100 < 85 THEN
                         make_interval(
@@ -1070,7 +1071,8 @@ f AS (
                 END
                 + make_interval(mins => e.surgery_duration_min)
             ELSE
-                e.t_elect_req_start
+                COALESCE(e.t_fu3_end, e.t_fu2_end, e.t_fu1_end, e.t_ncv_elective_end)
+                + make_interval(days => (2 + (e.h2 % 4)))
                 + CASE
                     WHEN e.h4 % 100 < 85 THEN
                         make_interval(
@@ -1117,6 +1119,9 @@ fin AS (
         f.surgery_duration_min AS estimated_duration_min,
         f.entry_class,
         f.entry_status,
+        f.case_request_priority_detail,
+        f.surgery_priority,
+        f.referral_priority,
         f.anchor_ts,
         f.t_entry_start,
         f.t_entry_end,
@@ -1691,12 +1696,18 @@ slot_start AS (
         CASE
             WHEN sc.status = 'Completed' THEN
                 CURRENT_DATE::timestamp
-                - make_interval(days => (abs(hashtextextended(sc.event_id::text, 11)) % 7))
-                + make_interval(hours => 8 + (abs(hashtextextended(sc.event_id::text, 12)) % 8), mins => (abs(hashtextextended(sc.event_id::text, 13)) % 4) * 15)
+                - make_interval(days => (abs(hashtextextended(sc.event_id::text, 11)) % 7)::integer)
+                + make_interval(
+                    hours => (8 + (abs(hashtextextended(sc.event_id::text, 12)) % 8))::integer,
+                    mins => ((abs(hashtextextended(sc.event_id::text, 13)) % 4) * 15)::integer
+                )
             ELSE
                 CURRENT_DATE::timestamp
-                + make_interval(days => (abs(hashtextextended(sc.event_id::text, 14)) % 30))
-                + make_interval(hours => 8 + (abs(hashtextextended(sc.event_id::text, 15)) % 8), mins => (abs(hashtextextended(sc.event_id::text, 16)) % 4) * 15)
+                + make_interval(days => (abs(hashtextextended(sc.event_id::text, 14)) % 30)::integer)
+                + make_interval(
+                    hours => (8 + (abs(hashtextextended(sc.event_id::text, 15)) % 8))::integer,
+                    mins => ((abs(hashtextextended(sc.event_id::text, 16)) % 4) * 15)::integer
+                )
         END AS scheduled_start
     FROM slot_candidates sc
 ),

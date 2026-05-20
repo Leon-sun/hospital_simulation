@@ -95,7 +95,7 @@ CREATE TABLE "FactEntryPointPathwayProbability" (
     CONSTRAINT chk_entry_pathway_effective_dates
         CHECK (effective_end_date IS NULL OR effective_end_date >= effective_start_date),
     CONSTRAINT uq_entry_pathway_effective
-        UNIQUE (entry_point_id, pathway_id, effective_start_date)
+        UNIQUE (entry_point_id, pathway_id, effective_start_date, condition_rule)
 );
 
 CREATE TABLE "FactPathwayTransition" (
